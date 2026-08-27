@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="bg5" cx="32%" cy="28%" r="80%">
+      <stop offset="0%" stop-color="#1D2A23"/>
+      <stop offset="100%" stop-color="#141C18"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="17" fill="url(#bg5)"/>
+  <text x="32" y="41" font-family="Georgia, serif" font-style="italic" font-weight="600" font-size="26" fill="#E7CC85" text-anchor="middle">Zr</text>
+</svg>
