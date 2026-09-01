@@ -250,6 +250,24 @@
 
   .reveal{opacity:0; transform:translateY(18px); transition:opacity .7s ease, transform .7s ease;}
   .reveal.in{opacity:1; transform:translateY(0);}
+  .testi .who .av{width:30px; height:30px; border-radius:50%; background:var(--night); color:var(--gold-soft); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.78rem;}
+  /* Review submission form */
+.review-form-wrap{max-width:480px; margin:44px auto 0;}
+.review-form-card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:28px;}
+.review-form-card h3{margin:0 0 6px; font-family:'Fraunces', serif; font-style:italic; font-weight:600; font-size:1.1rem; color:var(--night);}
+.review-form-card p.hint{color:var(--muted); font-size:0.85rem; margin:0 0 20px;}
+.review-form-card .field{margin-bottom:15px;}
+.review-form-card label{display:block; font-size:0.84rem; margin-bottom:6px; color:var(--ink); font-weight:600;}
+.review-form-card input, .review-form-card select, .review-form-card textarea{
+  width:100%; padding:11px 14px; border-radius:10px; border:1px solid var(--line);
+  background:var(--cream); font-family:inherit; font-size:0.92rem; color:var(--ink);
+}
+.review-form-card input:focus, .review-form-card select:focus, .review-form-card textarea:focus{border-color:var(--gold); outline:none;}
+.review-form-card textarea{min-height:80px; resize:vertical;}
+.star-picker{display:flex; gap:6px; font-size:1.6rem; direction:ltr; justify-content:flex-end;}
+.star-picker span{color:var(--line); cursor:pointer; transition:color .15s;}
+.star-picker span.active{color:var(--gold);}
+.review-form-card .form-submit:disabled{opacity:0.6; cursor:not-allowed;}
 </style>
   <meta name="google-site-verification" content="doPoz8hupArbcxm7J25u_HiNkB3enFXh9yovL1yufVw" />
 </head>
@@ -387,7 +405,7 @@
       <span class="eyebrow">نظرات دانش‌آموزان</span>
       <h2>تجربه‌ی کسانی که کلاس را گذرانده‌اند</h2>
     </div>
-    <div class="testi-grid">
+    <div class="testi-grid" id="testiGrid">
       <div class="testi reveal">
         <div class="stars">★★★★★</div>
         <p>«توضیحات آرام و دقیق باعث شد نکاتی که سال‌ها گیج‌کننده بودن رو بالاخره بفهمم.»</p>
@@ -404,6 +422,35 @@
         <div class="who"><span class="av">س</span> دانش‌آموز، سطح B2</div>
       </div>
     </div>
+    <div class="review-form-wrap reveal">
+  <div class="review-form-card">
+    <h3>شما هم دانش‌آموز این کلاس بودید؟</h3>
+    <p class="hint">نظرتون رو بنویسید؛ همین که ارسال کنید، برای همه‌ی بازدیدکننده‌های سایت نمایش داده می‌شه.</p>
+    <form id="reviewForm">
+      <div class="field">
+        <label for="rname">نام شما</label>
+        <input type="text" id="rname" required placeholder="مثلاً: سارا احمدی">
+      </div>
+      <div class="field">
+        <label for="rlevel">سطح شما</label>
+        <select id="rlevel">
+          <option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>امتیاز شما</label>
+        <div class="star-picker" id="starPicker">
+          <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="rtext">نظر شما</label>
+        <textarea id="rtext" required placeholder="تجربه‌تون از کلاس رو بنویسید..."></textarea>
+      </div>
+      <button type="submit" class="form-submit" id="reviewSubmitBtn">ثبت نظر</button>
+    </form>
+  </div>
+</div>
   </div>
 </section>
 
@@ -559,6 +606,97 @@
     revealEls.forEach(el=>el.classList.add('in'));
   }
 </script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, limit
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+  const firebaseConfig = {
+    apiKey: "AIzaSyBExRmH3LbgD81Da-9QZZNnuO4TOjMu5aA",
+    authDomain: "rahimzad-english.firebaseapp.com",
+    projectId: "rahimzad-english",
+    storageBucket: "rahimzad-english.firebasestorage.app",
+    messagingSenderId: "885367006890",
+    appId: "1:885367006890:web:bc4a679bccd2748bd312d3"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+  }
+
+  function renderReview(d, prepend){
+    const testiGrid = document.getElementById('testiGrid');
+    const el = document.createElement('div');
+    el.className = 'testi reveal in';
+    const initial = (d.name || '؟').trim().charAt(0);
+    el.innerHTML = 
+      <div class="stars">${'★'.repeat(Math.min(5, Math.max(1, d.stars || 5)))}</div>
+      <p>«${escapeHtml(d.text)}»</p>
+      <div class="who"><span class="av">${escapeHtml(initial)}</span> ${escapeHtml(d.name)}، سطح ${escapeHtml(d.level)}</div>
+    ;
+    if(prepend){ testiGrid.prepend(el); } else { testiGrid.appendChild(el); }
+  }
+
+  async function loadReviews(){
+    try{
+      const q = query(collection(db, "reviews"), orderBy("createdAt", "desc"), limit(30));
+      const snap = await getDocs(q);
+      snap.forEach(doc => renderReview(doc.data(), false));
+    } catch(err){
+      console.error("خطا در بارگذاری نظرات:", err);
+    }
+  }
+
+  let selectedStars = 5;
+  const starPicker = document.getElementById('starPicker');
+  const starSpans = starPicker.querySelectorAll('span');
+  function paintStars(v){
+    starSpans.forEach(s => s.classList.toggle('active', parseInt(s.dataset.v) <= v));
+  }
+  paintStars(selectedStars);
+  starSpans.forEach(s => {
+    s.addEventListener('click', () => {
+      selectedStars = parseInt(s.dataset.v);
+      paintStars(selectedStars);
+    });
+  });
+
+  const reviewForm = document.getElementById('reviewForm');
+  const submitBtn = document.getElementById('reviewSubmitBtn');
+  reviewForm.addEventListener('submit', async function(e){
+    e.preventDefault();
+    const name = document.getElementById('rname').value.trim();
+    const level = document.getElementById('rlevel').value;
+    const text = document.getElementById('rtext').value.trim();
+    if(!name || !text) return;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "در حال ارسال...";
+
+    const data = { name, level, text, stars: selectedStars, createdAt: serverTimestamp() };
+    try{
+      await addDoc(collection(db, "reviews"), data);
+      renderReview(data, true);
+      reviewForm.reset();
+      selectedStars = 5;
+      paintStars(selectedStars);
+      submitBtn.textContent = "ثبت شد ✓";
+      setTimeout(()=>{ submitBtn.textContent = "ثبت نظر"; submitBtn.disabled = false; }, 1800);
+    } catch(err){
+      console.error("خطا در ثبت نظر:", err);
+      alert("مشکلی توی ثبت نظر پیش اومد. لطفاً دوباره امتحان کنید.");
+      submitBtn.textContent = "ثبت نظر";
+      submitBtn.disabled = false;
+    }
+  });
+
+  loadReviews();
+</script>
 </body>
 </html>
