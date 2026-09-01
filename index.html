@@ -635,11 +635,11 @@
     const el = document.createElement('div');
     el.className = 'testi reveal in';
     const initial = (d.name || '؟').trim().charAt(0);
-    el.innerHTML = 
+    el.innerHTML = `
       <div class="stars">${'★'.repeat(Math.min(5, Math.max(1, d.stars || 5)))}</div>
       <p>«${escapeHtml(d.text)}»</p>
       <div class="who"><span class="av">${escapeHtml(initial)}</span> ${escapeHtml(d.name)}، سطح ${escapeHtml(d.level)}</div>
-    ;
+    `;
     if(prepend){ testiGrid.prepend(el); } else { testiGrid.appendChild(el); }
   }
 
