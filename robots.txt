@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://rahimzad-english.github.io/English-Clases/sitemap.xml
